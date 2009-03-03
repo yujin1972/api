@@ -84,20 +84,17 @@
         if(sound) {
           sound.pause();
           dom.removeClass("playing");
-          $("body").removeClass("playing");
         }
       };
 
       var play = function() {
         if(sound) {
-          $("body").removeClass("playing");
           if(sound.paused) {
             sound.resume();
           } else {
             sound.play();
           }
           dom.addClass("playing");
-          $("body").addClass("playing");
         }
       };
 
