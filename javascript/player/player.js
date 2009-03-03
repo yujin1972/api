@@ -1,7 +1,9 @@
 (function($) {
   $.fn.scPlayer = function(callerSettings) {
     return this.each(function(){
-//      var settings = $.extend({foo:'foo'},callerSettings || {});
+      // default settings
+      var settings = $.extend({width:500},callerSettings || {});
+
       $(this).wrap("<div class='player-large'></div>");
 
       var dom = $(this).parent("div.player-large");
@@ -10,6 +12,7 @@
 
       var sound = null; //holds the soundmanager 2 sound object
 
+      // init the player on first click of the link
       $("a",dom)
         .click(function() {
           if($(".position",dom).length == 0) { // if not initied, then load track data, and init the sound            
@@ -32,7 +35,8 @@
                 var loading = $(".loading",dom);
                 var progress = $(".progress",dom);
 
-                dom.animate({width:400},500,"easeinout");
+                // expand out the player to the width in the settings
+                dom.animate({width:settings.width},500,"easeinout");
 
                 // set up progress
                 progressBar.click(function(ev) {
@@ -46,13 +50,13 @@
                 sound = soundManager.createSound({
                   id: track.id,
                   url: track.stream_url,
-                  whileloading : SC.throttle(200,function() {
+                  whileloading : throttle(200,function() {
                     loading.css('width',(sound.bytesLoaded/sound.bytesTotal)*100+"%");
                   }),
-                  whileplaying : SC.throttle(200,function() {
+                  whileplaying : throttle(200,function() {
                     progress.css('width',(sound.position/sound.durationEstimate)*100+"%");
-                    $('.position',dom).html(SC.formatMs(sound.position));
-                    $('.duration',dom).html(SC.formatMs(sound.durationEstimate));
+                    $('.position',dom).html(formatMs(sound.position));
+                    $('.duration',dom).html(formatMs(sound.durationEstimate));
                   }),
                   onfinish : function() {
                     dom.removeClass("playing");
@@ -65,19 +69,14 @@
                 togglePlay();
               });
 
-          } else {
+          } else { // if inited, the toggle between play/pause
             togglePlay();
           }
           return false;
         });
 
-
       var togglePlay = function() {
-        if(dom.hasClass("playing")) {
-          stop();
-        } else {
-          play();      
-        }        
+        dom.hasClass("playing") ? stop() : play();
       };
 
       var stop = function() {
@@ -89,14 +88,43 @@
 
       var play = function() {
         if(sound) {
-          if(sound.paused) {
-            sound.resume();
-          } else {
-            sound.play();
-          }
+          sound.paused ? sound.resume() : sound.play();
           dom.addClass("playing");
         }
       };
+
+      // format millis into MM.SS
+      var formatMs = function(ms) {
+        var s = Math.floor((ms/1000) % 60);
+        if (s < 10) { s = "0"+s; }
+        return Math.floor(ms/60000) + "." + s;
+      };
+      
+      // throttling function to minimize redraws caused by soundmanager
+      var throttle = function(delay, fn) {
+        var last = null,
+            partial = fn;
+
+        if (delay > 0) {
+          partial = function() {
+            var now = new Date(),
+                scope = this,
+                args = arguments;
+
+            // We are the last call made, so cancel the previous last call
+            clearTimeout(partial.futureTimeout);
+
+            if (last === null || now - last > delay) { 
+              fn.apply(scope, args);
+              last = now;
+            } else {
+              // guarentee that the method will be called after the right delay
+              partial.futureTimeout = setTimeout(function() { fn.apply(scope, args); }, delay);
+            }
+          };
+        }
+        return partial;
+      }
 
     });
     };
