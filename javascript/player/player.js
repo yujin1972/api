@@ -1,12 +1,14 @@
 (function($) {
   $.fn.scPlayer = function(callerSettings) {
     return this.each(function(){
-      var dom = this;
+//      var settings = $.extend({foo:'foo'},callerSettings || {});
+      $(this).wrap("<div class='player-large'></div>");
 
-//      var settings = $.extend({foo:'hej'},callerSettings || {});
-      $(dom).wrap("<div class='player-large'></div>");
+      var dom = $(this).parent("div.player-large");
 
       var track = {}; // holds the soundcloud track data
+
+      var sound = null; //holds the soundmanager 2 sound object
 
       $("a",dom)
         .click(function() {
@@ -41,7 +43,7 @@
                   }
                 });
 
-                var sound = soundManager.createSound({
+                sound = soundManager.createSound({
                   id: track.id,
                   url: track.stream_url,
                   whileloading : SC.throttle(200,function() {
