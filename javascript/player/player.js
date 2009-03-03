@@ -18,8 +18,8 @@
 
                 $("<div class='loading'></div><div class='progress'></div><div class='progress-bar'></div><p class='time'></p>").appendTo(dom);
 
-                $("<span class='position'></span> / <span class='duration'></span>")
-                  .prependTo($(".time",dom))
+                $("<span><span class='position'></span> / <span class='duration'></span></span>")
+                  .appendTo($(".time",dom))
                   .hide()
                   .fadeIn(1500);
 
