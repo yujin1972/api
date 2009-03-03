@@ -6,7 +6,6 @@ soundManager.defaultOptions.multiShot = false;
 //soundManager.consoleOnly = true;
 //soundManager.useHighPerformance = false;
 
-// init function for the players
-soundManager.onload = function() {
-  $("a.soundcloud-player").scPlayer({width:300});
-}
+$(function() {
+  $("a.soundcloud-player").scPlayer();
+});
