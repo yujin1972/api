@@ -24,15 +24,16 @@
       var settings = $.extend({width:500},callerSettings || {}); // default settings
       var track = {}; // the soundcloud track data
       var sound = null; // the soundmanager 2 sound object
-      var link = this; // the player a-tag
+      var link = $(this); // the player a-tag
       var dom = null; // the root player dom node, created on first play
 
       // init the player on first click of the link
-      $(this)
+      link
         .click(function() {
           if(!dom) { // if not initied, then load track data, and init the sound
-              $(link).wrap("<div class='player-large'></div>");
-              dom = $(link).parent("div.player-large");
+              link.wrap("<div class='player-large'></div>");
+              dom = link.parent("div.player-large");
+              link.addClass("controls");
               $.getJSON("http://api.soundcloud.com/tracks/flickermood.js?callback=?", function(data) {
                 track = data;
 
@@ -46,8 +47,17 @@
                 $("<p class='metadata'>" + track.user.username + " - " + track.title + "</p>")
                   .appendTo(dom)
                   .hide()
-                  .fadeIn(1500);              
+                  .fadeIn(1500);
 
+                // This is wrapped in a timeout because for some reason the browser doesn't update the width of the .metadata element instantly
+                setTimeout(function() {
+                  $("<a class='permalink' href='" + track.permalink_url + "'>»</a>")
+                    .appendTo(dom)
+                    .css({left:($(".metadata",dom).offset().left + $(".metadata",dom).width()) })
+                    .hide()
+                    .fadeIn(1500);
+                },200);
+                
                 var progressBar = $(dom).find(".progress-bar");
                 var loading = $(".loading",dom);
                 var progress = $(".progress",dom);

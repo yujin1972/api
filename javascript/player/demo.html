@@ -9,11 +9,25 @@
   <script type="text/javascript" src="jquery-1.3.2.min.js"></script>
   <script type="text/javascript" src="player.js"></script>
   <script type="text/javascript" src="demo.js"></script>
+  <style type="text/css">
+    body {
+      font-family : Arial, sans-serif;
+    }
+    pre {
+      background: #eee;
+      border: 1px solid #ccc;
+      padding: 1em 0 0 0;
+      width: 70%;
+    }
+  </style>
 </head>
 <body>
-  <h1>Basic SoundCloud Player</h1>
-  <p>
-    <a class="soundcloud-player" href="http://soundcloud.com/forss/flickermood">Play</a>
-  </p>
+  <h1>SoundCloud Javascript Player Demo</h1>
+  <p>More examples and documentation over at <a href="http://wiki.github.com/soundcloud/api/javascript-players">Github</a>. To run these demos you'll need to either to serve this page through a web server, or adjust Flash's security settings to allow access to your filesystem.</p>
+  <h2>Basic initialization</h2>
+  <pre>
+    $("a.soundcloud-player").scPlayer();
+  </pre>
+  <a class="soundcloud-player" href="http://soundcloud.com/forss/flickermood">Play</a>
 </body>
 </html>
