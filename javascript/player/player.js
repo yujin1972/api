@@ -17,25 +17,22 @@
  * http://soundcloud.com/api
  * 
  */
- 
+
 (function($) {
   $.fn.scPlayer = function(callerSettings) {
     return this.each(function(){
-      // default settings
-      var settings = $.extend({width:500},callerSettings || {});
-
-      $(this).wrap("<div class='player-large'></div>");
-
-      var dom = $(this).parent("div.player-large");
-
-      var track = {}; // holds the soundcloud track data
-
-      var sound = null; //holds the soundmanager 2 sound object
+      var settings = $.extend({width:500},callerSettings || {}); // default settings
+      var track = {}; // the soundcloud track data
+      var sound = null; // the soundmanager 2 sound object
+      var link = this; // the player a-tag
+      var dom = null; // the root player dom node, created on first play
 
       // init the player on first click of the link
-      $("a",dom)
+      $(this)
         .click(function() {
-          if($(".position",dom).length == 0) { // if not initied, then load track data, and init the sound            
+          if(!dom) { // if not initied, then load track data, and init the sound
+              $(link).wrap("<div class='player-large'></div>");
+              dom = $(link).parent("div.player-large");
               $.getJSON("http://api.soundcloud.com/tracks/flickermood.js?callback=?", function(data) {
                 track = data;
 
@@ -46,7 +43,7 @@
                   .hide()
                   .fadeIn(1500);
 
-                $("<p class='metadata'><a href='" + track.user.permalink_url + "'>" + track.user.username + "</a> - <a href='" + track.permalink_url + "'>" + track.title + "</a></p>")
+                $("<p class='metadata'>" + track.user.username + " - " + track.title + "</p>")
                   .appendTo(dom)
                   .hide()
                   .fadeIn(1500);              
@@ -55,9 +52,11 @@
                 var loading = $(".loading",dom);
                 var progress = $(".progress",dom);
 
-                // expand out the player to the width in the settings
-                dom.animate({width:settings.width},500,"easeinout");
-
+                // expand out the player to the width in the settings                
+                if($.easing) {
+                  dom.animate({width:settings.width},500,"easeinout");
+                }
+                
                 // set up progress
                 progressBar.click(function(ev) {
                   var percent = (ev.clientX-progressBar.offset().left)/(progressBar.width());
@@ -80,6 +79,7 @@
                   }),
                   onfinish : function() {
                     dom.removeClass("playing");
+                    sound.setPosition(0);
                   },
                   onload : function () {
                     loading.css('width',"100%");
@@ -149,3 +149,24 @@
     });
     };
 })(jQuery);
+
+ /*
+  * jQuery Easing v1.1.1 - http://gsgd.co.uk/sandbox/jquery.easing.php
+  *
+  * Uses the built in easing capabilities added in jQuery 1.1
+  * to offer multiple easing options
+  *
+  * Copyright (c) 2007 George Smith
+  * Licensed under the MIT License:
+  *   http://www.opensource.org/licenses/mit-license.php
+  */
+
+/* Extending jQuery easing functions here with the one required for the player */
+
+jQuery.easing = jQuery.extend({
+	easeinout: function(x, t, b, c, d) {
+		if (t < d/2) return 2*c*t*t/(d*d) + b;
+		var ts = t - d/2;
+		return -2*c*ts*ts/(d*d) + 2*c*ts/d + c/2 + b;		
+  }
+},jQuery.easing);

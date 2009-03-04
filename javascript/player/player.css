@@ -33,21 +33,11 @@
     background-position: -20px 0;
   }
 
-  .player-large .metadata a {
-    color: #555;
-    text-decoration: none;    
-  }
-  
-  .player-large a:hover {
-    text-decoration: underline;    
-  }
-
   .player-large .metadata {
     position: absolute;
     left: 26px;
     top: 4px;
     margin: 0;
-    z-index: 5;
   }
   
   .player-large .time {
