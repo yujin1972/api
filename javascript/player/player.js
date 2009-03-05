@@ -21,89 +21,111 @@
 (function($) {
   $.fn.scPlayer = function(callerSettings) {
     return this.each(function(){
-      var settings = $.extend({width:500},callerSettings || {}); // default settings
+      var settings = $.extend({width:500, collapse : true, autoplay: false},callerSettings || {}); // default settings
       var track = {}; // the soundcloud track data
-      var sound = null; // the soundmanager 2 sound object
+      var sound; // the soundmanager 2 sound object
       var link = $(this); // the player a-tag
-      var dom = null; // the root player dom node, created on first play
+      var dom; // the root player dom node, created on first play
+
+      var progressBar;
+      var loading;
+      var progress;
+
+      var inited = false;
 
       // init the player on first click of the link
       link
         .click(function() {
-          if(!dom) { // if not initied, then load track data, and init the sound
-              link.wrap("<div class='player-large'></div>");
-              dom = link.parent("div.player-large");
-              link.addClass("controls");
-              $.getJSON("http://api.soundcloud.com/tracks/flickermood.js?callback=?", function(data) {
-                track = data;
-
-                $("<div class='loading'></div><div class='progress'></div><div class='progress-bar'></div><p class='time'></p>").appendTo(dom);
-
-                $("<span><span class='position'></span> / <span class='duration'></span></span>")
-                  .appendTo($(".time",dom))
-                  .hide()
-                  .fadeIn(1500);
-
-                $("<p class='metadata'>" + track.user.username + " - " + track.title + "</p>")
-                  .appendTo(dom)
-                  .hide()
-                  .fadeIn(1500);
-
-                // This is wrapped in a timeout because for some reason the browser doesn't update the width of the .metadata element instantly
-                setTimeout(function() {
-                  $("<a class='permalink' href='" + track.permalink_url + "'>»</a>")
-                    .appendTo(dom)
-                    .css({left:($(".metadata",dom).offset().left + $(".metadata",dom).width()) })
-                    .hide()
-                    .fadeIn(1500);
-                },200);
-                
-                var progressBar = $(dom).find(".progress-bar");
-                var loading = $(".loading",dom);
-                var progress = $(".progress",dom);
-
-                // expand out the player to the width in the settings                
-                if($.easing) {
-                  dom.animate({width:settings.width},500,"easeinout");
-                }
-                
-                // set up progress
-                progressBar.click(function(ev) {
-                  var percent = (ev.clientX-progressBar.offset().left)/(progressBar.width());
-                  if(sound.durationEstimate*percent < sound.duration) {
-                    sound.setPosition(sound.durationEstimate*percent);
-                    play();
-                  }
-                });
-
-                sound = soundManager.createSound({
-                  id: track.id,
-                  url: track.stream_url,
-                  whileloading : throttle(200,function() {
-                    loading.css('width',(sound.bytesLoaded/sound.bytesTotal)*100+"%");
-                  }),
-                  whileplaying : throttle(200,function() {
-                    progress.css('width',(sound.position/sound.durationEstimate)*100+"%");
-                    $('.position',dom).html(formatMs(sound.position));
-                    $('.duration',dom).html(formatMs(sound.durationEstimate));
-                  }),
-                  onfinish : function() {
-                    dom.removeClass("playing");
-                    sound.setPosition(0);
-                  },
-                  onload : function () {
-                    loading.css('width',"100%");
-                  }
-                });
-
-                togglePlay();
-              });
-
+          if(!inited) { // if not initied, then load track data, and init the sound
+            init(true); // passing true here means init and autoplay
           } else { // if inited, the toggle between play/pause
             togglePlay();
           }
           return false;
         });
+
+      var init = function(autoplay) {
+        link.wrap("<div class='sc-player'></div>");
+        dom = link.parent("div.sc-player");
+        link.addClass("controls");
+        dom.attr("id",link.attr("id"));
+        link.attr("id","");
+        
+        $.getJSON("http://api.soundcloud.com/tracks/" + link.attr("href").substring(link.attr("href").lastIndexOf("/")+1) + ".js?callback=?", function(data) {
+          track = data;
+
+          $("<div class='loading'></div><div class='progress'></div><div class='progress-bar'></div><p class='time'></p>").appendTo(dom);
+
+          $("<span><span class='position'></span> <span class='delimiter'>/</span> <span class='duration'></span></span>")
+            .appendTo($(".time",dom))
+            .hide()
+            .find(".duration").html(formatMs(track.duration)).end()
+            .fadeIn(1500);
+
+          $("<p class='metadata'>" + track.user.username + " - " + track.title + "</p>")
+            .appendTo(dom)
+            .hide()
+            .fadeIn(1500);
+
+          // This is wrapped in a timeout because for some reason the browser doesn't update the width of the .metadata element instantly. a bit ugly offset code here as well.
+          setTimeout(function() {
+            $("<a class='permalink' href='" + track.permalink_url + "'>»</a>")
+              .appendTo(dom)
+              .css({left:($(".metadata",dom).offset().left - $(dom).offset().left + $(".metadata",dom).width() + 5) })
+              .hide()
+              .fadeIn(1500);
+          },200);
+          
+          progressBar = $(dom).find(".progress-bar");
+          loading = $(".loading",dom);
+          progress = $(".progress",dom);
+
+          // expand out the player to the width in the settings                
+          if($.easing) {
+            dom.animate({width:settings.width},500,"easeinout");
+          }
+          
+          // set up progress
+          progressBar.click(function(ev) {
+            var percent = (ev.clientX-progressBar.offset().left)/(progressBar.width());
+            if(sound.durationEstimate*percent < sound.duration) {
+              sound.setPosition(sound.durationEstimate*percent);
+              play();
+            }
+          });
+          
+          var timer = setInterval(function() {  // this is kind of ugly but don't know a better way of waiting for SoundManager 2 when multiple players are on the page
+            if(window.soundManager.swfLoaded) {
+              sound = soundManager.createSound({
+                id: track.id,
+                url: track.stream_url,
+                whileloading : throttle(200,function() {
+                  loading.css('width',(sound.bytesLoaded/sound.bytesTotal)*100+"%");
+                }),
+                whileplaying : throttle(200,function() {
+                  progress.css('width',(sound.position/sound.durationEstimate)*100+"%");
+                  $('.position',dom).html(formatMs(sound.position));
+                  $('.duration',dom).html(formatMs(sound.durationEstimate));
+                }),
+                onfinish : function() {
+                  dom.removeClass("playing");
+                  sound.setPosition(0);
+                },
+                onload : function () {
+                  loading.css('width',"100%");
+                }
+              });
+
+              if(autoplay) {
+                play();
+              }
+              clearInterval(timer);
+            }
+          },200);
+
+          inited = true;
+        });
+      };
 
       var togglePlay = function() {
         dom.hasClass("playing") ? stop() : play();
@@ -119,6 +141,7 @@
       var play = function() {
         if(sound) {
           sound.paused ? sound.resume() : sound.play();
+          $(".delimiter",dom).show();
           dom.addClass("playing");
         }
       };
@@ -154,6 +177,12 @@
           };
         }
         return partial;
+      };
+
+      // expand the player on init if collapse=false
+      if(!settings.collapse) {
+        settings.autoplay ? init(true) : init();
+        dom.width(settings.width);
       }
 
     });

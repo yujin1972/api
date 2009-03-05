@@ -7,5 +7,8 @@ soundManager.defaultOptions.multiShot = false;
 //soundManager.useHighPerformance = false;
 
 $(function() {
-  $("a.soundcloud-player").scPlayer();
+  $("a.soundcloud-player#basic").scPlayer();
+  $("a.soundcloud-player#custom-width").scPlayer({width:600,collapse:false});
+  $("a.soundcloud-player#custom-css").scPlayer();
+  $("a.soundcloud-player#custom-size").scPlayer({width:"100%",collapse:false});
 });
