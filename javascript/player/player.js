@@ -26,12 +26,9 @@
       var sound; // the soundmanager 2 sound object
       var link = $(this); // the player a-tag
       var dom; // the root player dom node, created on first play
-
-      var progressBar;
-      var loading;
-      var progress;
-
-      var inited = false;
+      var loading; // the loading progress
+      var progress; // the playback progress
+      var inited = false; // player is not inited
 
       // init the player on first click of the link
       link
@@ -44,6 +41,7 @@
           return false;
         });
 
+      //init the player, get the track data from soundcloud, init sound
       var init = function(autoplay) {
         link.wrap("<div class='sc-player'></div>");
         dom = link.parent("div.sc-player");
@@ -76,7 +74,7 @@
               .fadeIn(1500);
           },200);
           
-          progressBar = $(dom).find(".progress-bar");
+          var progressBar = $(dom).find(".progress-bar");
           loading = $(".loading",dom);
           progress = $(".progress",dom);
 
@@ -186,7 +184,7 @@
       }
 
     });
-    };
+  };
 })(jQuery);
 
  /*
